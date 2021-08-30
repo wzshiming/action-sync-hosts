@@ -46,16 +46,26 @@ cat <<EOF >${OUTPUT}
 
 EOF
 
+declare -A mapIpDomains
+
 for domain in ${DOMAINS[@]}; do
     echo "nslookup ${domain}"
     ips=$(nslookup ${domain} ${DNS} | grep "Address" | grep -v '#' | awk '{print $2}' | sort)
     if [[ "${ips}" == "" ]]; then
         echo "# ${domain} not found" >>"${OUTPUT}"
     else
-        for ip in ${ips}; do
-            echo "${ip} ${domain}" >>"${OUTPUT}"
+        for ip in ${ips[@]}; do
+            if [[ -v "mapIpDomains[${ip}]" ]]; then
+                mapIpDomains[${ip}]="${mapIpDomains[${ip}]} ${domain}"
+            else
+                mapIpDomains[${ip}]="${domain}"
+            fi
         done
     fi
+done
+
+for ip in "${!mapIpDomains[@]}"; do
+    echo "${ip} ${mapIpDomains[${ip}]}" >>"${OUTPUT}"
 done
 
 git add "${OUTPUT}"
