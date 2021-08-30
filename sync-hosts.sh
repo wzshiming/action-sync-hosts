@@ -48,12 +48,31 @@ EOF
 
 declare -A mapIpDomains
 
+function get_ip() {
+    local domain="$1"
+    local dns="${2:-}"
+    nslookup "${domain}" ${dns} | grep "Address" | grep -v '#' | awk '{print $2}' | sort
+}
+
 for domain in ${DOMAINS[@]}; do
-    echo "nslookup ${domain}"
-    ips=$(nslookup ${domain} ${DNS} | grep "Address" | grep -v '#' | awk '{print $2}' | sort)
+    ips=$(get_ip "${domain}" ${DNS})
     if [[ "${ips}" == "" ]]; then
         echo "# ${domain} not found" >>"${OUTPUT}"
     else
+        if [[ $(echo "${ips}" | wc -l) -le 1 ]]; then
+            ori="${ips}"
+            for _ in {1..10}; do
+                for _ in {1..10}; do
+                    ip=$(get_ip "${domain}" ${DNS})
+                    if [[ "${ip}" == "${ori}" ]]; then
+                        break
+                    fi
+                    ips="${ips}
+${ip}"
+                done
+            done
+            ips="$(echo "$ips" | sort | uniq)"
+        fi
         for ip in ${ips[@]}; do
             if [[ -v "mapIpDomains[${ip}]" ]]; then
                 mapIpDomains[${ip}]="${mapIpDomains[${ip}]} ${domain}"
