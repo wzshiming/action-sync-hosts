@@ -83,7 +83,8 @@ ${ip}"
     fi
 done
 
-for ip in "${!mapIpDomains[@]}"; do
+IPS=$(echo "${!mapIpDomains[@]}" | tr ' ' '\n' | sort)
+for ip in ${IPS[@]}; do
     echo "${ip} ${mapIpDomains[${ip}]}" >>"${OUTPUT}"
 done
 
