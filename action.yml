@@ -1,0 +1,17 @@
+name: "Sync hosts"
+description: "Generate ip domain pairs for corresponding domain and synchronize to hosts"
+author: "wzshiming"
+inputs:
+  DNS:
+    description: "This DNS query ip"
+    required: false
+
+  DOMAINS:
+    description: "Need to synchronize the domain"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - run: ${{ github.action_path }}/sync-hosts.sh
+      shell: bash
